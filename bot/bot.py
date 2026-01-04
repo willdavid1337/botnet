@@ -4,9 +4,6 @@ import asyncio
 from datetime import datetime, timedelta, time
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
-import nest_asyncio
-
-nest_asyncio.apply()  # позволяет работать в окружениях с уже запущенным loop
 
 TOKEN = os.getenv("BOT_TOKEN")
 DATA_FILE = "users.json"
@@ -127,6 +124,7 @@ async def daily_loop(app):
 def main():
     app = Application.builder().token(TOKEN).build()
 
+    # Обработчики
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CallbackQueryHandler(start_relation, pattern="start_relation"))
     app.add_handler(CallbackQueryHandler(breakup_confirm, pattern="breakup"))
@@ -136,7 +134,7 @@ def main():
     # Запускаем ежедневный цикл через asyncio
     asyncio.create_task(daily_loop(app))
 
-    # PTB сам запускает свой loop
+    # Запуск бота
     app.run_polling()
 
 if __name__ == "__main__":
