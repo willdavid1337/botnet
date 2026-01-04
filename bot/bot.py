@@ -1,6 +1,5 @@
 import os
 import json
-import asyncio
 from datetime import datetime, timedelta, time
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
@@ -103,7 +102,7 @@ async def breakup_no(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     await query.edit_message_text("💖 Хорошо, продолжаем считать дни!")
 
-# Асинхронный цикл для ежедневных сообщений
+# Ежедневный цикл
 async def daily_loop(app):
     while True:
         now = datetime.utcnow() + timedelta(hours=3)  # МСК
@@ -113,14 +112,13 @@ async def daily_loop(app):
         wait_seconds = (target_time - now).total_seconds()
         await asyncio.sleep(wait_seconds)
 
-        # Отправляем сообщение всем активным пользователям
         for chat_id in users:
             if users[chat_id]["active"]:
                 users[chat_id]["day"] += 1
                 await send_day_message(app, chat_id)
         save_users()
 
-# Основная функция запуска
+# Запуск бота
 def main():
     app = Application.builder().token(TOKEN).build()
 
@@ -131,11 +129,10 @@ def main():
     app.add_handler(CallbackQueryHandler(breakup_yes, pattern="breakup_yes"))
     app.add_handler(CallbackQueryHandler(breakup_no, pattern="breakup_no"))
 
-    # Запускаем ежедневный цикл через asyncio
-    asyncio.create_task(daily_loop(app))
-
-    # Запуск бота
-    app.run_polling()
+    # Запуск бота и фоновый ежедневный цикл
+    app.run_polling(
+        on_startup=lambda app: app.create_task(daily_loop(app))
+    )
 
 if __name__ == "__main__":
     main()
